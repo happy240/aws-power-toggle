@@ -312,7 +312,7 @@ func pollForASG() (instances []virtualMachine, err error) {
 
 			isValidASG := false
 			for _, tag := range asg.Tags {
-				if *tag.Key == "power-toggle-enabled" && *tag.Value == "true" {
+				if *tag.Key == requiredTagKey && *tag.Value == requiredTagValue {
 					isValidASG = true
 					// gather some additional information about this ASG
 					if len(asg.Instances) > 0 && *asg.DesiredCapacity > 0 {
