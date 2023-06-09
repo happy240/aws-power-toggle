@@ -42,7 +42,7 @@ Parameters:
   DockerImage:
     Description: The name of the application
     Type: String
-    Default: gbolo/aws-power-toggle:3.3
+    Default: 825866514356.dkr.ecr.cn-northwest-1.amazonaws.com.cn/aws-power-toggle:3.5
   VPC:
     Description: VPC ID
     Type: AWS::EC2::VPC::Id
@@ -139,9 +139,9 @@ Resources:
             - ContainerPort: 8080
           Environment:
             - Name: POWER_TOGGLE_AWS_REGIONS
-              Value: eu-west-1 eu-central-1
+              Value: cn-north-1 cn-northwest-1
             - Name: POWER_TOGGLE_AWS_ENVIRONMENT_TAG_KEY
-              Value: AppEnv
+              Value: "pcn:auto:toggle-group"
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -225,7 +225,7 @@ Resources:
           Value: "60"
       Name: !Sub "${ClusterName}-alb"
       # "internal" is also an option
-      Scheme: internal
+      Scheme: internet-facing
       Subnets: !Ref LBSubnetIds
       SecurityGroups:
         - !Ref LoadBalancerSecurityGroup

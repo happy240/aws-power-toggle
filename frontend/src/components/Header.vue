@@ -3,17 +3,13 @@
     <div class="brand-container">
       <span
         role="img"
-        aria-label="AWS Power-Toggle logo"
+        aria-label="VM Toggle logo"
       >🔌✨</span>
       <div class="divider"></div>
-      <span>AWS Power-Toggle</span>
+      <span>VM Toggle</span>
     </div>
     <nav>
       <span class="version-container">{{versionLabel}}</span>
-      <a
-        target="_blank"
-        href="https://github.com/gbolo/aws-power-toggle"
-      >GitHub</a>
     </nav>
   </header>
 </template>

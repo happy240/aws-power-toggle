@@ -1,3 +1,4 @@
+//go:build go1.8
 // +build go1.8
 
 // enforce go 1.8+ just so we can support X25519 curve :)
@@ -6,14 +7,17 @@ package backend
 
 import (
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
+	"golang.org/x/time/rate"
 )
 
 var (
@@ -94,6 +98,25 @@ func configureHTTPServer(mux *mux.Router) (httpServer *http.Server) {
 		viper.GetString("server.bind_port"),
 	)
 
+	username := viper.GetString("server.basic_auth.username")
+	log.Info(username)
+	encoded_password := viper.GetString("server.basic_auth.password")
+	decodedPassword, err := base64.StdEncoding.DecodeString(encoded_password)
+	if err != nil {
+		log.Fatalf("Error while decoding password %s", err)
+	}
+	password := string(decodedPassword)
+	log.Info(password)
+	if username != "" && password != "" {
+		log.Info("Using basic auth")
+		mux.Use(basicAuthMiddleware(username, password))
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, "Welcome to the protected page!")
+		})
+	} else {
+		log.Info("Using no auth")
+	}
+
 	httpServer = &http.Server{
 		Addr: address,
 
@@ -140,4 +163,52 @@ func configureTLS() (tlsConfig tls.Config, err error) {
 	tlsConfig.CipherSuites = tlsCiphers
 
 	return
+}
+
+var rateLimiters = make(map[string]*rate.Limiter)
+
+func getRateLimiter(ip string) *rate.Limiter {
+	limiter, exists := rateLimiters[ip]
+	if !exists {
+		limiter = rate.NewLimiter(1, 5) // 限制为每秒1个请求，最大承受5个请求
+		rateLimiters[ip] = limiter
+	}
+	return limiter
+}
+
+func basicAuthMiddleware(username, password string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			clientIP := r.RemoteAddr
+			limiter := getRateLimiter(clientIP)
+
+			if !limiter.Allow() {
+				http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
+				return
+			}
+
+			if !authenticate(w, r, username, password) {
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func authenticate(w http.ResponseWriter, r *http.Request, user, password string) bool {
+	const BasicAuthPrefix = "Basic "
+
+	auth := r.Header.Get("Authorization")
+	if strings.HasPrefix(auth, BasicAuthPrefix) {
+		payload, _ := base64.StdEncoding.DecodeString(auth[len(BasicAuthPrefix):])
+		pair := strings.SplitN(string(payload), ":", 2)
+
+		if len(pair) == 2 && pair[0] == user && pair[1] == password {
+			return true
+		}
+	}
+
+	w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+	http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	return false
 }

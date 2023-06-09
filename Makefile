@@ -3,7 +3,7 @@
 PACKAGE     = aws-power-toggle
 METAPKG     = github.com/gbolo/aws-power-toggle/backend
 DATE       ?= $(shell date +%FT%T%z)
-VERSION     = 3.4
+VERSION     = 3.6
 COMMIT_SHA ?= $(shell git rev-parse --short HEAD)
 PKGS        = $(or $(PKG),$(shell $(GO) list ./...))
 TESTPKGS    = $(shell $(GO) list -f '{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' $(PKGS))
@@ -65,7 +65,7 @@ backend: ; $(info $(M) building backend executable...)        @ ## Build backend
 
 .PHONY: docker
 docker: clean ; $(info $(M) building docker image...)	      @ ## Build docker image
-	$Q docker build -t gbolo/$(PACKAGE):$(DOCKERTAG) .
+	$Q docker build -t eccomcoe/$(PACKAGE):$(DOCKERTAG) .
 
 .PHONY: frontend
 frontend: ; $(info $(M) building web frontend ui...)	      @ ## Build frontend

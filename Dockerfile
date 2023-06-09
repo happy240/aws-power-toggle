@@ -4,23 +4,33 @@
 #  BUILD CONTAINERS ------------------------------------------------------------
 #
 
-### Building frontend
-FROM debian:stable as builder-nodejs
+### Building frontend 
+#FROM debian:stable as builder-nodejs
+FROM node:14.15.1 as builder-nodejs
 
 WORKDIR /app
 COPY . .
 
 # install requirements for nvm
-RUN   set -xe; \
-      apt-get update && \
-      apt-get install -y --no-install-recommends ca-certificates curl bash git make
+#RUN   set -xe; \
+#      apt-get update && \
+#      apt-get install -y --no-install-recommends ca-certificates curl bash git make
 
 # switch to bash shell and install nvm from official script
 SHELL ["/bin/bash", "--login", "-c"]
-RUN   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
+#RUN   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
 
 # install the correct nodejs version via nvm, then build the frontend
-RUN   nvm install && make frontend
+#RUN   nvm install && make frontend
+RUN   export PROXY_SOCKS5="socks5://10.20.30.79:10808" && \
+      export PROXY_HTTP="http://10.20.30.79:10809" && \
+      export http_proxy="http://10.20.30.79:10809" && \
+      export HTTP_PROXY="http://10.20.30.79:10809" && \
+      export https_proxy="http://10.20.30.79:10809" && \
+      export HTTPS_PROXY="http://10.20.30.79:10809" && \
+      export all_proxy="http://10.20.30.79:10809" && \
+      export ALL_PROXY="http://10.20.30.79:10809"; \
+      make frontend
 
 
 ### Building backend
@@ -29,7 +39,15 @@ FROM golang:1.14-alpine as builder-golang
 WORKDIR /go/src/app
 COPY . .
 
-RUN   set -xe; \
+RUN   export PROXY_SOCKS5="socks5://10.20.30.79:10808" && \
+      export PROXY_HTTP="http://10.20.30.79:10809" && \
+      export http_proxy="http://10.20.30.79:10809" && \
+      export HTTP_PROXY="http://10.20.30.79:10809" && \
+      export https_proxy="http://10.20.30.79:10809" && \
+      export HTTPS_PROXY="http://10.20.30.79:10809" && \
+      export all_proxy="http://10.20.30.79:10809" && \
+      export ALL_PROXY="http://10.20.30.79:10809"; \
+      set -xe; \
       mkdir -p /tmp/build && \
       apk add --no-cache git make && \
       make backend && \
@@ -39,7 +57,8 @@ RUN   set -xe; \
 #  FINAL BASE CONTAINER --------------------------------------------------------
 #
 
-FROM  gbolo/baseos:alpine
+#FROM  gbolo/baseos:alpine
+FROM  alpine:latest
 
 # prepare env vars
 ENV   POWER_TOGGLE_SERVER_STATIC_FILES_DIR /opt/aws-pt/frontend

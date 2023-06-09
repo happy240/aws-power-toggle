@@ -29,6 +29,11 @@ server:
     # path to pem encoded pkcs1/8 private key
     private_key: /path/to/server-key.pem
 
+  # Password for Basic Authentication
+  basic_auth:
+    username = username
+    password = <Base64EncodePassword>
+
 # aws settings ---------------------------------------------------------------------------------------------------------
 aws:
   # TODO: add api keys to config
@@ -41,12 +46,12 @@ aws:
 
   # which regions to use
   regions:
-    - ca-central-1
-    - us-east-1
+    - cn-north-1
+    - cn-northwest-1
 
   # ONLY instances with this tag will be considered
   # tag key is case sensitive
-  required_tag_key: power-toggle-enabled
+  required_tag_key: <ToggleTag>
 
   # the value for the required tag
   # tag value is case sensitive
@@ -56,7 +61,7 @@ aws:
   # NOTE that instances are grouped by the value of this tag
   # If this tag is missing, the instance will NOT be considered
   # tag key is case sensitive
-  environment_tag_key: Environment
+  environment_tag_key: <GroupTag>
 
   # !! SAFETY option !!
   # prevents shutting down of too many instances
@@ -64,12 +69,6 @@ aws:
 
   # optional list of instance types to ignore
   ignore_instance_types:
-    - c5d.large
-    - c5d.xlarge
-    - c5d.2xlarge
-    - c5d.4xlarge
-    - c5d.9xlarge
-    - c5d.18xlarge
 
   # !! SAFETY option !!
   # optional list of environment names to ignore
@@ -95,7 +94,7 @@ mock:
 # slack settings -------------------------------------------------------------------------------------------------------
 slack:
   # enables aws-power-toggle to send event messages to slack channels
-  enabled: false
+  enabled: true
 
   # a list of Incoming Webhook URLs
   webhook_urls:
